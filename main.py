@@ -156,8 +156,13 @@ class ArticleEditHandler(BaseHandler):
   @user_required
   def get(self, article_key):
     article = ndb.Key(urlsafe=article_key).get()
-    self.render_template('edit_article.html', article=article)
-  
+    user_id = self.user_info['user_id']
+    user_key = ndb.Key('User', user_id)
+    if article.user_key == user_key:
+      self.render_template('edit_article.html', article=article)
+    else:
+      msg = "Sorry, you can't edit another user's articles."
+      self.display_message(msg)
   def post(self, article_key):
     title = self.request.get('title')
     content = self.request.get('content')
@@ -172,9 +177,15 @@ class ArticleDeleteHandler(BaseHandler):
   @user_required
   def get(self, article_key):
     article = ndb.Key(urlsafe=article_key).get()
-    article.key.delete()
-    self.redirect(self.uri_for('my_articles'))
-
+    user_id = self.user_info['user_id']
+    user_key = ndb.Key('User', user_id)
+    if article.user_key == user_key:
+      article.key.delete()
+      self.redirect(self.uri_for('my_articles'))
+    else:
+      msg = "Sorry, you can't delete another user's articles."
+      self.display_message(msg)
+    
 class ArticleCreateHandler(BaseHandler):
   @user_required
   def get(self):
@@ -185,7 +196,8 @@ class ArticleCreateHandler(BaseHandler):
     content = self.request.get('content')
     user_id = self.user_info['user_id']
     user_key = ndb.Key('User', user_id)
-    article = Article(parent=user_key, title=title, content=content, likes=0)
+    article = Article(title=title, likes=[],
+      user_key=user_key, content=content)
     article.put()
     self.redirect(self.uri_for('my_articles'))
 
@@ -193,16 +205,23 @@ class ArticleLikeHandler(BaseHandler):
   @user_required
   def get(self, article_key):
     article = ndb.Key(urlsafe=article_key).get()
-    article.likes = article.likes + 1
-    article.put()
-    self.redirect(self.uri_for('home'))
+    user_id = self.user_info['user_id']
+    user_key = ndb.Key('User', user_id)
+    if user_key in article.likes:
+      msg = "You have already liked this article"
+      self.display_message(msg)
+    else:
+      logging.info(article.likes)
+      article.likes.append(user_key)
+      article.put()
+      self.redirect(self.uri_for('home'))
 
 class ArticleUserHandler(BaseHandler):
   @user_required
   def get(self):
     user_id = self.user_info['user_id']
     user_key = ndb.Key('User', user_id)
-    articles = Article.query_articles(user_key).fetch(10)
+    articles = Article.query(Article.user_key == user_key).fetch()
     self.render_template('user_articles.html', articles=articles)
 
 # ------------------------------------------------------------------------

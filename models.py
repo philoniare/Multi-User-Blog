@@ -40,8 +40,9 @@ class Article(ndb.Model):
     """ Model for Individual Articles with User parent """
     title = ndb.StringProperty(required = True)
     content = ndb.TextProperty(required = True)
-    likes = ndb.IntegerProperty(required = True)
     date = ndb.DateTimeProperty(auto_now_add = True)
+    user_key = ndb.KeyProperty(required = True)
+    likes = ndb.KeyProperty(kind="User", repeated = True)
 
     @classmethod
     def query_articles(cls, ancestor_key):
@@ -60,3 +61,7 @@ class Comment(ndb.Model):
     @classmethod
     def query_comments(cls, ancestor_key):
         return cls.query(ancestor=ancestor_key).order(-cls.date)
+
+class DummyEntity(ndb.Model):
+    """ Dummy Entity for syncing query statements after updates """
+    date = ndb.DateTimeProperty(auto_now_add = True)

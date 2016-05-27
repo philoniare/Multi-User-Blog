@@ -7,8 +7,19 @@
             <div class="card-content">
               <span class="card-title">
               	<a href="/article/{{article.key.urlsafe()}}">
-					{{article.title}} ({{article.likes}} likes)
+					{{article.title}} 
+					(	
+						{% if article.likes | length == 0 %}
+							0 
+						{% else %}
+							{{article.likes | length}} 
+						{% endif %}
+						likes
+					)
 				</a>
+				<span class="right">
+					by {{article.user_key.get().username}}
+				</span>
 			  </span>
               <p>{{article.content}}</p>
             </div>
