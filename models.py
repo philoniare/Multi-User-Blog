@@ -43,5 +43,5 @@ class Article(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add = True)
 
     @classmethod
-    def query_articles(cls, ancestor_key):
+    def query_by_user(cls, ancestor_key):
         return cls.query(ancestor=ancestor_key).order(-cls.date)

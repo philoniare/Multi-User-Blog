@@ -5,12 +5,21 @@ from google.appengine.ext import ndb
 import logging
 import os.path
 import webapp2
+import jinja2
 
 from webapp2_extras import auth
 from webapp2_extras import sessions
+from models import *
 
 from webapp2_extras.auth import InvalidAuthIdError
 from webapp2_extras.auth import InvalidPasswordError
+
+# ------------------------------------------------------------------------
+#                             Config & Decorators
+# ------------------------------------------------------------------------
+template_dir = os.path.join(os.path.dirname(__file__), 'views')
+jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), 
+                 autoescape=True)
 
 def user_required(handler):
   """
@@ -57,24 +66,23 @@ class BaseHandler(webapp2.RequestHandler):
       """Helper for accessing the current session."""
       return self.session_store.get_session(backend="datastore")
 
-  def render_template(self, view_filename, params=None):
-    if not params:
-      params = {}
+  def write(self, *a, **kw):
+    self.response.out.write(*a, **kw)
+  
+  def render_str(self, template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
+  
+  def render_template(self, template, **kw):
     user = self.user_info
-    params['user'] = user
-    path = os.path.join(os.path.dirname(__file__), 'views', view_filename)
-    self.response.out.write(template.render(path, params))
+    self.write(self.render_str(template, user=user, **kw))
 
   def display_message(self, message):
     """ Utility function to display a template with a simple message."""
-    params = {
-      'message': message
-    }
-    self.render_template('message.html', params)
+    self.render_template('message.html', message=message)
 
   # this is needed for webapp2 sessions to work
   def dispatch(self):
-      # Get a session store for this request.
       self.session_store = sessions.get_store(request=self.request)
       try:
           webapp2.RequestHandler.dispatch(self)
@@ -102,11 +110,8 @@ class SignupHandler(BaseHandler):
     
     user = user_data[1]
     user_id = user.get_id()
-
     token = self.user_model.create_signup_token(user_id)
-
     msg = 'Successfully signed up'
-
     self.display_message(msg)
 
 class LoginHandler(BaseHandler):
@@ -124,13 +129,9 @@ class LoginHandler(BaseHandler):
       logging.info('Login failed for user %s because of %s', username, type(e))
       self._serve_page(True)
 
-  def _serve_page(self, failed=False):
+  def _serve_page(self, login_status=False):
     username = self.request.get('username')
-    params = {
-      'username': username,
-      'failed': failed
-    }
-    self.render_template('login.html', params)
+    self.render_template('login.html', username=username, login_status=login_status)
 
 class LogoutHandler(BaseHandler):
   def get(self):
@@ -145,11 +146,36 @@ class AuthenticatedHandler(BaseHandler):
 # ------------------------------------------------------------------------
 #                            Article Handlers
 # ------------------------------------------------------------------------
+class ArticleHandler(BaseHandler):
+  def get(self):
+    article = Article.query()
+    self.render_template('article.html', article=article)
+
+class ArticleCreateHandler(BaseHandler):
+  @user_required
+  def get(self):
+    self.render_template('create_article.html')
+  def post(self):
+    title = self.request.get('title')
+    content = self.request.get('content')
+    user_id = self.user_info['user_id']
+    user_key = ndb.Key('User', user_id)
+    article = Article(parent=user_key, title=title, content=content)
+    article.put()
+    self.redirect(self.uri_for('home'))
+
+class ArticleUserHandler(BaseHandler):
+  @user_required
+  def get(self):
+    user_id = self.user_info['user_id']
+    user_key = ndb.Key('User', user_id)
+    articles = Article.query_by_user(user_key).fetch(10)
+    self.render_template('user_articles.html', articles=articles)
 
 class MainHandler(BaseHandler):
-  def get(self):
-    self.render_template('home.html')
-
+  def get(self, articles=None):
+    articles = Article.query()
+    self.render_template('home.html', articles=articles)
 
 config = {
   'webapp2_extras.auth': {
@@ -166,7 +192,10 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/signup', SignupHandler),
     webapp2.Route('/login', LoginHandler, name='login'),
     webapp2.Route('/logout', LogoutHandler, name='logout'),
-    webapp2.Route('/authenticated', AuthenticatedHandler, name='authenticated')
+    webapp2.Route('/my/articles', ArticleUserHandler, name='my_articles'),
+    webapp2.Route(r'/article/create', ArticleCreateHandler, name='create_article'),
+    webapp2.Route(r'/article/(\d+)', ArticleHandler),
+    webapp2.Route('/authenticated', AuthenticatedHandler, name='authenticated'),
 ], debug=True, config=config)
 
 logging.getLogger().setLevel(logging.DEBUG)

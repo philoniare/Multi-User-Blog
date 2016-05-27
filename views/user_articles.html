@@ -2,13 +2,12 @@
 
 {% block maincontent %}
 <a href="/signup">Register</a>
-	Articles
+	My Articles
 	{% for article in articles %}
-		<a href="/article/{{article.key.id()}}">
+		<a href="/articles/">
 			<h1>{{article.title}}</h1>
 		</a>
 		<p>{{article.content}}</p>
 	{% endfor %}
 	<a href="/article/create">Create New Article</a>
-	<a href="/my/articles">My Articles</a>
 {% endblock %}
