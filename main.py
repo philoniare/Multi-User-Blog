@@ -147,20 +147,53 @@ class AuthenticatedHandler(BaseHandler):
 #                            Article Handlers
 # ------------------------------------------------------------------------
 class ArticleHandler(BaseHandler):
-  def get(self):
-    article = Article.query()
-    self.render_template('article.html', article=article)
+  def get(self, article_key):
+    article = ndb.Key(urlsafe=article_key).get()
+    comments = Comment.query_comments(article.key).fetch(10)
+    self.render_template('article.html', article=article, comments=comments)
+
+class ArticleEditHandler(BaseHandler):
+  @user_required
+  def get(self, article_key):
+    article = ndb.Key(urlsafe=article_key).get()
+    self.render_template('edit_article.html', article=article)
+  
+  def post(self, article_key):
+    title = self.request.get('title')
+    content = self.request.get('content')
+    article_key = article_key
+    article = ndb.Key(urlsafe=article_key).get()
+    article.title = title
+    article.content = content
+    article.put()
+    self.redirect(self.uri_for('home'))
+
+class ArticleDeleteHandler(BaseHandler):
+  @user_required
+  def get(self, article_key):
+    article = ndb.Key(urlsafe=article_key).get()
+    article.key.delete()
+    self.redirect(self.uri_for('my_articles'))
 
 class ArticleCreateHandler(BaseHandler):
   @user_required
   def get(self):
     self.render_template('create_article.html')
+  
   def post(self):
     title = self.request.get('title')
     content = self.request.get('content')
     user_id = self.user_info['user_id']
     user_key = ndb.Key('User', user_id)
-    article = Article(parent=user_key, title=title, content=content)
+    article = Article(parent=user_key, title=title, content=content, likes=0)
+    article.put()
+    self.redirect(self.uri_for('my_articles'))
+
+class ArticleLikeHandler(BaseHandler):
+  @user_required
+  def get(self, article_key):
+    article = ndb.Key(urlsafe=article_key).get()
+    article.likes = article.likes + 1
     article.put()
     self.redirect(self.uri_for('home'))
 
@@ -169,8 +202,23 @@ class ArticleUserHandler(BaseHandler):
   def get(self):
     user_id = self.user_info['user_id']
     user_key = ndb.Key('User', user_id)
-    articles = Article.query_by_user(user_key).fetch(10)
+    articles = Article.query_articles(user_key).fetch(10)
     self.render_template('user_articles.html', articles=articles)
+
+# ------------------------------------------------------------------------
+#                            Article Handlers
+# ------------------------------------------------------------------------
+class CommentCreateHandler(BaseHandler):
+  @user_required
+  def post(self, article_key):
+    article = ndb.Key(urlsafe=article_key).get()
+    text = self.request.get('text')
+    comment = Comment(text=text, parent=article.key, 
+      username = self.user_info['username'],
+      user_id=str(self.user_info['user_id']))
+    comment.put()
+    self.redirect(self.uri_for('home'))
+
 
 class MainHandler(BaseHandler):
   def get(self, articles=None):
@@ -194,7 +242,11 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/logout', LogoutHandler, name='logout'),
     webapp2.Route('/my/articles', ArticleUserHandler, name='my_articles'),
     webapp2.Route(r'/article/create', ArticleCreateHandler, name='create_article'),
-    webapp2.Route(r'/article/(\d+)', ArticleHandler),
+    webapp2.Route(r'/article/like/<article_key:.+>', ArticleLikeHandler),
+    webapp2.Route(r'/article/edit/<article_key:.+>', ArticleEditHandler),
+    webapp2.Route(r'/article/delete/<article_key:.+>', ArticleDeleteHandler),
+    webapp2.Route(r'/article/<article_key:.+>', ArticleHandler),
+    webapp2.Route(r'/comment/create/<article_key:.+>', CommentCreateHandler, name='create_comment'),
     webapp2.Route('/authenticated', AuthenticatedHandler, name='authenticated'),
 ], debug=True, config=config)
 

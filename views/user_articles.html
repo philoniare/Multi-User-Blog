@@ -1,13 +1,25 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
-<a href="/signup">Register</a>
-	My Articles
+	<h1>My Articles</h1>
 	{% for article in articles %}
-		<a href="/articles/">
-			<h1>{{article.title}}</h1>
-		</a>
-		<p>{{article.content}}</p>
+          <div class="card darken-1 hoverable">
+            <div class="card-content">
+              <span class="card-title">
+              	<a href="/article/{{article.key.urlsafe()}}">
+					{{article.title}} ({{article.likes}} likes)
+				</a>
+			  </span>
+              <p>{{article.content}}</p>
+            </div>
+            <div class="card-action">
+            	<a href="/article/like/{{article.key.urlsafe()}}">LIKE</a>
+				<a href="/article/edit/{{article.key.urlsafe()}}">Edit</a>
+				<a href="/article/delete/{{article.key.urlsafe()}}">Delete</a>
+            </div>
+          </div>
 	{% endfor %}
-	<a href="/article/create">Create New Article</a>
+	<div class="center">
+		<a class="waves-effect waves-light btn" href="/article/create">Create New Article</a>
+	</div>
 {% endblock %}

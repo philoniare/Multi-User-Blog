@@ -2,28 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>{% block title %}User accounts demo{% endblock %}</title>
+    <title>{% block title %}Multi-User Blog{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   </head>
   <body>
-    <div class="content">
+    <nav>
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo center">Multi-User Blog</a>
+        <ul id="nav-mobile" class="right">
+          <li><a href="/">Home</a></li>
+            {% if not user %}
+              <li><a href="/login">Login</a></li>
+              <li><a href="/signup">Register</a></li>
+            {% else %}
+              <li><a href="/my/articles">My Articles</a></li>
+              <li>Logged in as {{ user.username }}</a></li>
+              <li><a href="/logout">Logout</a></li>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container">  
+      <div class="row">
+        <div class="col s12 m9 offset-m2">
       {% block maincontent %}
 
       {% endblock %}
+        </div>
+      </div>
     </div>
-    <div>
-      <footer>
-        <hr/>
-        <p>
-          {% if not user %}
-            <a href="/login">Login</a>
-          {% else %}
-            Logged in as <span style="background-color: OldLace">{{ user.username }}</span> | <a href="/logout">Logout</a>
-          {% endif %}
-          <a href="/">Home</a>
-          <a href="/signup">New user</a>
-          <a href="/authenticated">Secured page</a>
-        </p>
-      </footer>
-    </div>
+    
+    <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
   </body>
 </html>

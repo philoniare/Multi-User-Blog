@@ -1,14 +1,18 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
-	<h1>Create a New Article</h1>
-	<form action="/article/create" method="post">
-		<label for="">Title</label>
-		<input type="text" name="title"><br>
-		<label for="">Content</label>
-		<textarea name="" id="" cols="30" rows="10" name="content">
-			
-		</textarea><br>
-		<button type="submit">Create</button>
-	</form>
+	<div class="row">
+      <div class="col s12 m9 offset-m2">
+		<h1>Create a New Article</h1>
+			<form action="/article/create" method="post">
+			<label for="">Title</label>
+			<input type="text" name="title"><br>
+			<label for="">Content</label>
+			<textarea id="" cols="30" rows="10" name="content"></textarea><br>
+			<div class="center">
+				<button class="waves-effect waves-light btn" type="submit">Create</button>
+			</div>
+		</form>
+	  </div>
+	</div>
 {% endblock %}

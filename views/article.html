@@ -1,5 +1,23 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
-	Specific Article
+	<h1>{{article.title}} ({{article.likes}} likes)</h1>
+	<p>{{article.content}}</p>
+	
+	<div>
+		<a class="waves-effect waves-light btn" href="/article/like/{{article.key.urlsafe()}}">
+			<i class="material-icons left">thumb_up</i>Like the article</a>
+		<a class="waves-effect waves-light btn" href="/article/edit/{{article.key.urlsafe()}}">
+			<i class="material-icons left">mode_edit</i>Edit Article</a>	
+		<a class="waves-effect waves-light btn" href="/article/delete/{{article.key.urlsafe()}}">
+			<i class="material-icons left">delete</i>Delete Article</a>
+	</div>
+	<h3>Comments</h3>
+	{% for comment in comments %}
+		<p class="truncate">{{comment.text}} -- by {{comment.username}}</p>
+	{% endfor %}
+	<form action="/comment/create/{{article.key.urlsafe()}}" method="post">
+		<input type="text" name="text" placeholder="New Comment">
+		<button class="waves-effect waves-light btn" type="submit"><i class="material-icons left">comment</i>button</button>
+	</form>
 {% endblock %}

@@ -1,12 +1,10 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
-	<h1>Login</h1>
-
 	{% if failed %}
 	    <strong>Login failed!</strong> Check your credentials and try again.
 	{% endif %}
-
+	<h1>Login</h1>
 	<form class="form" action= "/login" method="POST">
 		<label for="username">Username</label>
 		<input type="text" value="{{ username }}" name="username"/>

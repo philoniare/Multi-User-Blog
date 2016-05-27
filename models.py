@@ -40,8 +40,23 @@ class Article(ndb.Model):
     """ Model for Individual Articles with User parent """
     title = ndb.StringProperty(required = True)
     content = ndb.TextProperty(required = True)
+    likes = ndb.IntegerProperty(required = True)
     date = ndb.DateTimeProperty(auto_now_add = True)
 
     @classmethod
-    def query_by_user(cls, ancestor_key):
+    def query_articles(cls, ancestor_key):
+        return cls.query(ancestor=ancestor_key).order(-cls.date)
+
+class Comment(ndb.Model):
+    """ 
+        Model for individual comments on articles.
+        Has both Articles and Users as Ancestors
+    """
+    user_id = ndb.StringProperty(required = True)
+    username = ndb.StringProperty(required = True)
+    text = ndb.StringProperty(required = True)
+    date = ndb.DateTimeProperty(auto_now_add = True)
+
+    @classmethod
+    def query_comments(cls, ancestor_key):
         return cls.query(ancestor=ancestor_key).order(-cls.date)

@@ -1,0 +1,12 @@
+{% extends "main.html" %}
+
+{% block maincontent %}
+	<h1>Edit Article</h1>
+	<form action="/article/edit/{{article.key.urlsafe()}}" method="post">
+		<label for="">Title</label>
+		<input type="text" name="title" value="{{article.title}}"><br>
+		<label for="">Content</label>
+		<textarea id="" cols="30" rows="10" name="content">{{article.content}}</textarea><br>
+	<button type="submit">Update</button>
+	</form>
+{% endblock %}
