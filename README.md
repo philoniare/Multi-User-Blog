@@ -1,8 +1,8 @@
 ### Multi-User Blog (Medium Clone)
 Blog made with Google App Engine Python as the back-end, using Jinja templating engine and Materialize. 
 Implemented secure authentication and session management with webapp2.
-Credit for https://blog.abahgat.com/2013/01/07/user-authentication-with-webapp2-on-google-app-engine/
-for a comprehensive tutorial on the subject matter.
+Credit for [abahgat's blog](https://blog.abahgat.com/2013/01/07/user-authentication-with-webapp2-on-google-app-engine/)
+for a comprehensive tutorial on GAE authentication.
 
 ## Screenshot
 ![Screenshot](screenshot.png)
