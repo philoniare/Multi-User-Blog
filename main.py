@@ -9,7 +9,10 @@ import jinja2
 
 from webapp2_extras import auth
 from webapp2_extras import sessions
-from models import *
+from models import Article
+from models import Comment
+from models import DummyEntity
+
 
 from webapp2_extras.auth import InvalidAuthIdError
 from webapp2_extras.auth import InvalidPasswordError
@@ -148,9 +151,11 @@ class AuthenticatedHandler(BaseHandler):
 # ------------------------------------------------------------------------
 class ArticleHandler(BaseHandler):
   def get(self, article_key):
+    user_id = self.user_info['user_id']
     article = ndb.Key(urlsafe=article_key).get()
     comments = Comment.query_comments(article.key).fetch(10)
-    self.render_template('article.html', article=article, comments=comments)
+    self.render_template('article.html', article=article, 
+      comments=comments, user_id=str(user_id))
 
 class ArticleEditHandler(BaseHandler):
   @user_required
@@ -208,7 +213,12 @@ class ArticleLikeHandler(BaseHandler):
     user_id = self.user_info['user_id']
     user_key = ndb.Key('User', user_id)
     if user_key in article.likes:
+      # Checks if user has already liked the article
       msg = "You have already liked this article"
+      self.display_message(msg)
+    elif article.user_key == user_key:
+      # Checks if the article's author is the current user
+      msg = "Sorry, you can't like your own article"
       self.display_message(msg)
     else:
       logging.info(article.likes)
@@ -225,7 +235,7 @@ class ArticleUserHandler(BaseHandler):
     self.render_template('user_articles.html', articles=articles)
 
 # ------------------------------------------------------------------------
-#                            Article Handlers
+#                            Comment Handlers
 # ------------------------------------------------------------------------
 class CommentCreateHandler(BaseHandler):
   @user_required
@@ -238,6 +248,21 @@ class CommentCreateHandler(BaseHandler):
     comment.put()
     self.redirect(self.uri_for('home'))
 
+class CommentEditHandler(BaseHandler):
+  @user_required
+  def post(self, comment_key):
+    comment = ndb.Key(urlsafe=comment_key).get()
+    text = self.request.get('text')
+    comment.text = text
+    comment.put()
+    self.redirect(self.uri_for('home'))
+
+class CommentDeleteHandler(BaseHandler):
+  @user_required
+  def get(self, comment_key):
+    comment = ndb.Key(urlsafe=comment_key).get()
+    comment.key.delete()
+    self.redirect(self.uri_for('home'))
 
 class MainHandler(BaseHandler):
   def get(self, articles=None):
@@ -266,6 +291,8 @@ app = webapp2.WSGIApplication([
     webapp2.Route(r'/article/delete/<article_key:.+>', ArticleDeleteHandler),
     webapp2.Route(r'/article/<article_key:.+>', ArticleHandler),
     webapp2.Route(r'/comment/create/<article_key:.+>', CommentCreateHandler, name='create_comment'),
+    webapp2.Route(r'/comment/edit/<comment_key:.+>', CommentEditHandler),
+    webapp2.Route(r'/comment/delete/<comment_key:.+>', CommentDeleteHandler),
     webapp2.Route('/authenticated', AuthenticatedHandler, name='authenticated'),
 ], debug=True, config=config)
 

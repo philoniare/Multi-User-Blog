@@ -1,7 +1,16 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
-	<h1>{{article.title}} ({{article.likes}} likes)</h1>
+	<h1>{{article.title}} 
+		(		
+			{% if article.likes | length == 0 %}
+				0 
+			{% else %}
+				{{article.likes | length}} 
+			{% endif %}
+			likes
+		)
+	</h1><hr>
 	<p>{{article.content}}</p>
 	
 	<div>
@@ -14,10 +23,31 @@
 	</div>
 	<h3>Comments</h3>
 	{% for comment in comments %}
-		<p class="truncate">{{comment.text}} -- by {{comment.username}}</p>
+		{% if comment.user_id == user_id %}
+			<div class="row">
+				<form action="/comment/edit/{{comment.key.urlsafe()}}" method="post">
+					<div class="col m7">
+						<input class="" type="text" name="text" value="{{comment.text}}">
+					</div>
+					<div class="col m2">
+						<button type="submit">Update Comment</button>
+					</div>
+					
+				</form> 
+				<form action="/comment/delete/{{comment.key.urlsafe()}}">
+					<div class="col m2">
+						<button>Delete Comment</button>		
+					</div>	
+				</form>
+			</div>
+		{% else %}
+			<div class="row">
+				<span class="truncate">{{comment.text}} -- by {{comment.username}}</span>
+			</div>
+		{% endif %}
 	{% endfor %}
 	<form action="/comment/create/{{article.key.urlsafe()}}" method="post">
 		<input type="text" name="text" placeholder="New Comment">
-		<button class="waves-effect waves-light btn" type="submit"><i class="material-icons left">comment</i>button</button>
+		<button class="waves-effect waves-light btn" type="submit"><i class="material-icons left">comment</i>Add comment</button>
 	</form>
 {% endblock %}
