@@ -4,6 +4,9 @@ Implemented secure authentication and session management with webapp2.
 Credit for https://blog.abahgat.com/2013/01/07/user-authentication-with-webapp2-on-google-app-engine/
 for a comprehensive tutorial on the subject matter.
 
+## Screenshot
+![Screenshot](screenshot.png)
+
 ### Demo Url
 https://blog-1325.appspot.com/
 
@@ -18,7 +21,7 @@ https://blog-1325.appspot.com/
 - And click Run to start the app
 - Go to localhost:<port> to access the application
 
-### Notes:
+### Future modifications:
 - Could have used AJAX methods to make it more interactive, rather than redirecting the user around 
 	different pages, but chose to focus on learning the GAE API and usage of NDB
 - Url's could also be more friendly like displaying the article titles, but I am using the article keys for convenience
